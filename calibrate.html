@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#20113c">
+    <title>Mixer microphone test</title>
+    <style>
+      :root { color-scheme:dark; font-family:system-ui,sans-serif; background:#20113c; color:white }
+      * { box-sizing:border-box }
+      body { max-width:1100px; margin:auto; padding:24px; background:#20113c }
+      h1 { margin:0 0 8px; font-size:clamp(28px,5vw,48px) }
+      .intro { max-width:720px; margin:0 0 18px; color:#d9cdec; line-height:1.45 }
+      .toolbar { display:flex; align-items:center; gap:14px; margin-bottom:20px; flex-wrap:wrap }
+      button { min-height:50px; border:0; border-radius:14px; padding:10px 18px; font:800 17px/1 system-ui; color:white; background:#62469a }
+      button:disabled { opacity:.45 }
+      #permission { background:#12a98e }
+      #permission.ready { background:#315e55 }
+      #global-status { color:#d9cdec; font-weight:700 }
+      .options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px }
+      .option { display:grid; grid-template-rows:auto auto 1fr auto; gap:12px; min-height:250px; padding:20px; border:2px solid #ffffff20; border-radius:20px; background:#34205a }
+      .option h2 { margin:0; font-size:23px }
+      .option p { margin:0; color:#d9cdec; line-height:1.35 }
+      .details { align-self:end; min-height:42px; color:#c7b8df; font:700 14px/1.4 ui-monospace,monospace }
+      .actions { display:flex; gap:10px }
+      .record { flex:1; background:#e33b46 }
+      .record.active { animation:pulse 1s infinite; background:#ff5965 }
+      .play { width:58px; padding:0; background:#247fac }
+      .play[disabled] { background:#4d4d67 }
+      .note { margin:20px 0 0; color:#b8a9d2; font-size:14px }
+      @keyframes pulse { 50% { filter:brightness(1.25) } }
+      @media (max-width:700px) { body{padding:16px}.options{grid-template-columns:1fr}.option{min-height:225px} }
+    </style>
+  </head>
+  <body>
+    <h1>Microphone level test</h1>
+    <p class="intro">Enable the microphone, then record the same phrase from the same distance with each option. Every recording lasts three seconds. Play them back and note which number sounds best—not merely loudest.</p>
+    <div class="toolbar">
+      <button id="permission">Enable microphone</button>
+      <span id="global-status" role="status" aria-live="polite">Nothing is uploaded.</span>
+    </div>
+    <main class="options">
+      <section class="option" data-mode="auto">
+        <h2>1 · Android automatic</h2>
+        <p>Android/Chrome controls the microphone level. No additional boost.</p>
+        <div class="details">Not recorded</div>
+        <div class="actions"><button class="record">Record 3 sec</button><button class="play" disabled aria-label="Play option 1">▶</button></div>
+      </section>
+      <section class="option" data-mode="raw">
+        <h2>2 · Raw</h2>
+        <p>Automatic gain disabled. No additional boost.</p>
+        <div class="details">Not recorded</div>
+        <div class="actions"><button class="record">Record 3 sec</button><button class="play" disabled aria-label="Play option 2">▶</button></div>
+      </section>
+      <section class="option" data-mode="double">
+        <h2>3 · Fixed 2×</h2>
+        <p>Automatic gain disabled. The finished recording gets up to 2× gain with peak protection.</p>
+        <div class="details">Not recorded</div>
+        <div class="actions"><button class="record">Record 3 sec</button><button class="play" disabled aria-label="Play option 3">▶</button></div>
+      </section>
+      <section class="option" data-mode="balanced">
+        <h2>4 · Loudness balanced</h2>
+        <p>Automatic gain disabled. Average loudness sets up to 4× gain, followed by a soft limiter.</p>
+        <div class="details">Not recorded</div>
+        <div class="actions"><button class="record">Record 3 sec</button><button class="play" disabled aria-label="Play option 4">▶</button></div>
+      </section>
+    </main>
+    <p class="note">Recordings remain in memory on this device and disappear when this page closes.</p>
+    <script>
+      'use strict';
+      const cards = [...document.querySelectorAll('.option')];
+      const permission = document.querySelector('#permission');
+      const globalStatus = document.querySelector('#global-status');
+      const recordings = new Map();
+      let context;
+      let recording = false;
+
+      function audio() {
+        if (!context) context = new (window.AudioContext || window.webkitAudioContext)();
+        if (context.state === 'suspended') context.resume();
+        return context;
+      }
+
+      async function requestStream(autoGainControl) {
+        return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl}});
+      }
+
+      permission.addEventListener('click', async () => {
+        try {
+          const stream = await requestStream(true);
+          stream.getTracks().forEach(track => track.stop());
+          permission.textContent = 'Microphone ready';
+          permission.classList.add('ready');
+          globalStatus.textContent = 'Record the same phrase four times.';
+        } catch (_) {
+          globalStatus.textContent = 'Microphone permission was blocked.';
+        }
+      });
+
+      function stats(buffer) {
+        let peak = 0, sum = 0, count = 0;
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+          for (const sample of buffer.getChannelData(channel)) {
+            const absolute = Math.abs(sample);
+            peak = Math.max(peak, absolute);
+            if (absolute >= .003) { sum += sample * sample; count++; }
+          }
+        }
+        return {peak, rms:count ? Math.sqrt(sum / count) : 0};
+      }
+
+      function fixedGain(buffer, maximum) {
+        const before = stats(buffer);
+        const gain = before.peak >= .001 ? Math.min(maximum, .95 / before.peak) : 1;
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+          const samples = buffer.getChannelData(channel);
+          for (let i = 0; i < samples.length; i++) samples[i] *= gain;
+        }
+        return {buffer, gain};
+      }
+
+      async function loudnessBalance(buffer) {
+        const before = stats(buffer);
+        const gain = before.rms >= .001 ? Math.min(4, .18 / before.rms) : 1;
+        const offline = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+        const source = offline.createBufferSource();
+        const amplifier = offline.createGain();
+        const limiter = offline.createDynamicsCompressor();
+        source.buffer = buffer;
+        amplifier.gain.value = gain;
+        limiter.threshold.value = -4;
+        limiter.knee.value = 4;
+        limiter.ratio.value = 16;
+        limiter.attack.value = .002;
+        limiter.release.value = .15;
+        source.connect(amplifier).connect(limiter).connect(offline.destination);
+        source.start();
+        return {buffer:await offline.startRendering(), gain};
+      }
+
+      async function process(buffer, mode) {
+        if (mode === 'double') return fixedGain(buffer, 2);
+        if (mode === 'balanced') return loudnessBalance(buffer);
+        return {buffer, gain:1};
+      }
+
+      function setDisabled(value) {
+        cards.forEach(card => card.querySelector('.record').disabled = value);
+        permission.disabled = value;
+      }
+
+      async function record(card) {
+        if (recording) return;
+        recording = true;
+        setDisabled(true);
+        const mode = card.dataset.mode;
+        const button = card.querySelector('.record');
+        const details = card.querySelector('.details');
+        let stream;
+        try {
+          stream = await requestStream(mode === 'auto');
+          const actualAgc = stream.getAudioTracks()[0].getSettings().autoGainControl;
+          const chunks = [];
+          const recorder = new MediaRecorder(stream);
+          recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+          const stopped = new Promise(resolve => recorder.onstop = resolve);
+          recorder.start();
+          button.classList.add('active');
+          for (let remaining = 3; remaining > 0; remaining--) {
+            button.textContent = `Recording ${remaining}…`;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+          recorder.stop();
+          await stopped;
+          stream.getTracks().forEach(track => track.stop());
+          stream = null;
+          const encoded = await new Blob(chunks,{type:recorder.mimeType}).arrayBuffer();
+          const decoded = await audio().decodeAudioData(encoded);
+          const result = await process(decoded, mode);
+          const levels = stats(result.buffer);
+          recordings.set(mode, result.buffer);
+          details.textContent = `AGC: ${actualAgc ?? 'unreported'} · gain: ${result.gain.toFixed(2)}× · RMS: ${levels.rms.toFixed(3)} · peak: ${levels.peak.toFixed(3)}`;
+          card.querySelector('.play').disabled = false;
+          globalStatus.textContent = `Option ${cards.indexOf(card) + 1} is ready to play.`;
+        } catch (error) {
+          details.textContent = 'Recording failed. Check microphone permission.';
+          globalStatus.textContent = error.message;
+        } finally {
+          stream?.getTracks().forEach(track => track.stop());
+          button.classList.remove('active');
+          button.textContent = 'Record 3 sec';
+          recording = false;
+          setDisabled(false);
+        }
+      }
+
+      function play(card) {
+        const buffer = recordings.get(card.dataset.mode);
+        if (!buffer) return;
+        const source = audio().createBufferSource();
+        source.buffer = buffer;
+        source.connect(audio().destination);
+        source.start();
+      }
+
+      cards.forEach(card => {
+        card.querySelector('.record').addEventListener('click', () => record(card));
+        card.querySelector('.play').addEventListener('click', () => play(card));
+      });
+    </script>
+  </body>
+</html>

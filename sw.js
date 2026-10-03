@@ -1,5 +1,5 @@
-const CACHE = 'mixer-v8';
-const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icons/icon.svg'];
+const CACHE = 'mixer-v9';
+const ASSETS = ['./', './index.html', './calibrate.html', './styles.css', './app.js', './manifest.webmanifest', './icons/icon.svg'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS))));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))));
 self.addEventListener('fetch', event => {
