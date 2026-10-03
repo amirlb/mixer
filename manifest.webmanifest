@@ -1,0 +1,14 @@
+{
+  "name": "Mixer — My Sound Pad",
+  "short_name": "Mixer",
+  "description": "A simple six-pad sound toy.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#20113c",
+  "theme_color": "#29164d",
+  "icons": [
+    {"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
