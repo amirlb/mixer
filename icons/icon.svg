@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Six colorful sound pads">
+  <rect width="512" height="512" rx="96" fill="#29164d"/>
+  <g stroke="#29164d" stroke-width="16">
+    <path fill="#ffb000" d="M48 48h133v200H48z"/>
+    <path fill="#f04475" d="M189 48h134v200H189z"/>
+    <path fill="#00bfb3" d="M331 48h133v200H331z"/>
+    <path fill="#6e69e8" d="M48 264h133v200H48z"/>
+    <path fill="#ed6b35" d="M189 264h134v200H189z"/>
+    <path fill="#3a9bea" d="M331 264h133v200H331z"/>
+  </g>
+</svg>
