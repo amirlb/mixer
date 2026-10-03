@@ -14,6 +14,29 @@ const trash = document.querySelector('#trash');
 let deferredInstall;
 const HOLD_MS = 600;
 
+// Keep one landscape layout for the entire session. Viewport changes only
+// rotate and scale this canvas; they never resize individual grid tracks.
+const layoutWidth = Math.max(window.innerWidth, window.innerHeight);
+const layoutHeight = Math.min(window.innerWidth, window.innerHeight);
+const rootStyle = document.documentElement.style;
+rootStyle.setProperty('--layout-width', `${layoutWidth}px`);
+rootStyle.setProperty('--layout-height', `${layoutHeight}px`);
+rootStyle.setProperty('--long-unit', `${layoutWidth / 100}px`);
+rootStyle.setProperty('--short-unit', `${layoutHeight / 100}px`);
+
+function fitLayout() {
+  const width = window.innerWidth, height = window.innerHeight;
+  const portrait = height > width;
+  const scale = Math.min(
+    (portrait ? height : width) / layoutWidth,
+    (portrait ? width : height) / layoutHeight
+  );
+  rootStyle.setProperty('--layout-turn', portrait ? '90deg' : '0deg');
+  rootStyle.setProperty('--layout-scale', scale);
+}
+fitLayout();
+window.addEventListener('resize', fitLayout);
+
 function audio() {
   if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -96,7 +119,7 @@ function startRecording(index) {
 async function captureRecording(session) {
   const { index } = session;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
     if (recordingSession !== session) { stream.getTracks().forEach(track => track.stop()); pads[index].classList.remove('recording'); return; }
     const mediaRecorder = new MediaRecorder(stream);
     session.stream = stream; session.recorder = mediaRecorder;
@@ -108,7 +131,7 @@ async function captureRecording(session) {
       if (!session.save) return;
       try {
         const data = await new Blob(session.chunks, { type: mediaRecorder.mimeType }).arrayBuffer();
-        sounds[index].buffer = trim(await audio().decodeAudioData(data));
+        sounds[index].buffer = trim(boostRecording(await audio().decodeAudioData(data)));
         setPadState(index); message('Sound saved!');
       } catch (_) { message('Could not save that sound'); }
     };
@@ -128,8 +151,23 @@ function finishRecording(index, save) {
   if (session.recorder?.state === 'recording') session.recorder.stop();
 }
 
+function boostRecording(buffer) {
+  let peak = 0;
+  for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+    for (const sample of buffer.getChannelData(channel)) peak = Math.max(peak, Math.abs(sample));
+  }
+  // Leave near-silence alone. Use one gain across channels to preserve balance,
+  // cap amplification at 6x, and keep peaks below full scale.
+  const gain = peak >= 0.001 ? Math.min(6, 0.9 / peak) : 1;
+  for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+    const samples = buffer.getChannelData(channel);
+    for (let i = 0; i < samples.length; i++) samples[i] *= gain;
+  }
+  return buffer;
+}
+
 function trim(buffer) {
-  const threshold = 0.015;
+  const threshold = 0.003;
   let first = buffer.length, last = 0;
   for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
     const data = buffer.getChannelData(channel);

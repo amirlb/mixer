@@ -11,6 +11,9 @@ Settings.
   capture; a valid hold saves it and trims quiet audio from both ends.
 - A quick tap on a filled pad plays its sound immediately. Each tap creates a
   separate voice, so the same sound can overlap itself at different phases.
+- Microphone automatic gain is enabled. Quiet saved recordings receive up to
+  6x gain with peak headroom; near-silence is left alone. A lower trimming
+  threshold preserves quieter starts and endings.
 - Pressing and holding a filled pad adds it to, or removes it from, the loop.
   Loops begin together on a shared musical boundary while one-shot taps remain
   immediate and independent.
@@ -26,6 +29,8 @@ Settings.
 
 - **Stop** is a circular transport control that immediately stops every voice
   and clears every selected loop.
+- Stop has a larger touch target, with an even larger drag-to-trash target in
+  the same reserved column. A wider gutter separates both from the pads.
 - **Settings** is a quiet, flat corner control. It opens a fresh, random
   two-digit addition challenge whose answer never exceeds 99. A correct answer
   opens the parent panel; no previous answer or repeated state is stored.
@@ -36,9 +41,10 @@ one available.
 
 ## Device constraints
 
-- The web app requests landscape orientation in its manifest. In portrait it
-  rotates a dimension-swapped landscape canvas, preserving the exact layout
-  instead of squeezing it into the narrow viewport.
+- The web app requests landscape orientation in its manifest. It measures one
+  landscape canvas at launch and keeps its grid dimensions fixed. Orientation
+  and viewport changes rotate or uniformly scale that canvas (including dialogs)
+  without recalculating individual pad sizes or moving controls within it.
 - It is a PWA with an app manifest, icons, and an offline service worker.
 - The implementation avoids frameworks and expensive continuous animation so
   it remains responsive on an Android tablet from roughly 2021.
