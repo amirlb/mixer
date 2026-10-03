@@ -13,20 +13,19 @@
   <body>
     <main class="app" aria-label="Sound mixer">
       <section class="pads" aria-label="Sound pads">
-        <button class="pad pad--star empty" data-pad="0" aria-label="Empty star pad. Hold to record."><span class="art">★</span><span class="hint">hold to record</span><span class="progress" aria-hidden="true"></span></button>
-        <button class="pad pad--heart empty" data-pad="1" aria-label="Empty heart pad. Hold to record."><span class="art">♥</span><span class="hint">hold to record</span><span class="progress" aria-hidden="true"></span></button>
-        <button class="pad pad--rainbow empty" data-pad="2" aria-label="Empty rainbow pad. Hold to record."><span class="art">⌒</span><span class="hint">hold to record</span><span class="progress" aria-hidden="true"></span></button>
-        <button class="pad pad--moon empty" data-pad="3" aria-label="Empty moon pad. Hold to record."><span class="art">☾</span><span class="hint">hold to record</span><span class="progress" aria-hidden="true"></span></button>
-        <button class="pad pad--flower empty" data-pad="4" aria-label="Empty flower pad. Hold to record."><span class="art">✿</span><span class="hint">hold to record</span><span class="progress" aria-hidden="true"></span></button>
-        <button class="pad pad--spiral empty" data-pad="5" aria-label="Empty spiral pad. Hold to record."><span class="art">◎</span><span class="hint">hold to record</span><span class="progress" aria-hidden="true"></span></button>
+        <button class="pad pad--star empty" data-pad="0" aria-label="Empty star pad. Hold to record."><span class="art">★</span><span class="progress" aria-hidden="true"></span></button>
+        <button class="pad pad--heart empty" data-pad="1" aria-label="Empty heart pad. Hold to record."><span class="art">♥</span><span class="progress" aria-hidden="true"></span></button>
+        <button class="pad pad--rainbow empty" data-pad="2" aria-label="Empty rainbow pad. Hold to record."><span class="art">⌒</span><span class="progress" aria-hidden="true"></span></button>
+        <button class="pad pad--moon empty" data-pad="3" aria-label="Empty moon pad. Hold to record."><span class="art">☾</span><span class="progress" aria-hidden="true"></span></button>
+        <button class="pad pad--flower empty" data-pad="4" aria-label="Empty flower pad. Hold to record."><span class="art">✿</span><span class="progress" aria-hidden="true"></span></button>
+        <button class="pad pad--spiral empty" data-pad="5" aria-label="Empty spiral pad. Hold to record."><span class="art">◎</span><span class="progress" aria-hidden="true"></span></button>
       </section>
       <nav class="controls" aria-label="Main controls">
-        <button id="stop" class="control stop"><span aria-hidden="true">■</span> Stop</button>
-        <button id="settings" class="control settings"><span aria-hidden="true">⚙</span> Settings</button>
+        <button id="stop" class="control stop" aria-label="Stop"><span aria-hidden="true">■</span></button>
+        <button id="settings" class="control settings" aria-label="Settings"><span aria-hidden="true">⚙</span></button>
       </nav>
     </main>
 
-    <aside id="rotate" class="rotate" aria-live="polite"><div>↻</div><strong>Turn me sideways!</strong></aside>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <dialog id="gate" class="dialog">
@@ -34,7 +33,7 @@
         <button class="close" id="close-gate" type="button" aria-label="Close">×</button>
         <p class="eyebrow">Grown-ups only</p>
         <h1 id="question">12 + 34 = ?</h1>
-        <input id="answer" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="Answer">
+        <input id="answer" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" aria-label="Answer">
         <p id="gate-error" class="error" aria-live="polite"></p>
         <button class="wide" value="default">Open settings</button>
       </form>

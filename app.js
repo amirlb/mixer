@@ -51,8 +51,15 @@ function play(index, loop = false) {
 }
 
 function showProgress(index, source, duration) {
+  const progressElement = pads[index].querySelector('.progress');
+  const usedIndexes = new Set([...progressElement.children].map(ring => Number(ring.dataset.ringIndex)));
+  let ringIndex = 0;
+  while (usedIndexes.has(ringIndex)) ringIndex++;
   const ring = document.createElement('i');
-  ring.className = 'ring'; pads[index].querySelector('.progress').append(ring);
+  ring.className = 'ring';
+  ring.dataset.ringIndex = ringIndex;
+  ring.style.setProperty('--ring-index', ringIndex);
+  progressElement.append(ring);
   const started = performance.now();
   function frame(now) {
     const progress = Math.min(1, (now - started) / (duration * 1000));
@@ -168,7 +175,7 @@ document.querySelector('#stop').addEventListener('click', () => {
 const gate = document.querySelector('#gate');
 let expectedAnswer = 0;
 document.querySelector('#settings').addEventListener('click', () => {
-  const left = 10 + Math.floor(Math.random() * 80), right = 10 + Math.floor(Math.random() * 80);
+  const left = 10 + Math.floor(Math.random() * 80), right = 10 + Math.floor(Math.random() * (90 - left));
   expectedAnswer = left + right; document.querySelector('#question').textContent = `${left} + ${right} = ?`;
   document.querySelector('#answer').value = ''; document.querySelector('#gate-error').textContent = ''; gate.showModal();
 });
