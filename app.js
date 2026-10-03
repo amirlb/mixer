@@ -119,7 +119,7 @@ function startRecording(index) {
 async function captureRecording(session) {
   const { index } = session;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
     if (recordingSession !== session) { stream.getTracks().forEach(track => track.stop()); pads[index].classList.remove('recording'); return; }
     const mediaRecorder = new MediaRecorder(stream);
     session.stream = stream; session.recorder = mediaRecorder;
@@ -156,9 +156,9 @@ function boostRecording(buffer) {
   for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
     for (const sample of buffer.getChannelData(channel)) peak = Math.max(peak, Math.abs(sample));
   }
-  // Leave near-silence alone. Use one gain across channels to preserve balance,
-  // cap amplification at 6x, and keep peaks below full scale.
-  const gain = peak >= 0.001 ? Math.min(6, 0.9 / peak) : 1;
+  // Apply a predictable 2x boost. Use one gain across channels to preserve
+  // balance, leave near-silence alone, and keep peaks below full scale.
+  const gain = peak >= 0.001 ? Math.min(2, 0.95 / peak) : 1;
   for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
     const samples = buffer.getChannelData(channel);
     for (let i = 0; i < samples.length; i++) samples[i] *= gain;
