@@ -5,8 +5,7 @@ const sounds = pads.map(() => ({ buffer: null, looping: false, loopTimer: 0 }));
 const activeSources = new Set();
 let audioContext;
 let master;
-let recorder;
-let chunks = [];
+let recordingSession;
 let heldPad = null;
 let holdTimer = 0;
 let holdTriggered = false;
@@ -36,7 +35,7 @@ function setPadState(index) {
   const sound = sounds[index];
   pad.classList.toggle('empty', !sound.buffer);
   pad.classList.toggle('looping', sound.looping);
-  pad.setAttribute('aria-label', sound.buffer ? `${pad.querySelector('.art').textContent} sound pad${sound.looping ? ', looping' : ''}. Tap to play; hold to toggle loop.` : 'Empty sound pad. Hold to record.');
+  pad.setAttribute('aria-label', sound.buffer ? `${pad.querySelector('.art').textContent} sound pad${sound.looping ? ', looping' : ''}. Tap to play; hold to toggle loop; hold and shake to clear.` : 'Empty sound pad. Hold to record.');
 }
 
 function play(index, loop = false) {
@@ -84,22 +83,47 @@ function toggleLoop(index) {
   setPadState(index);
 }
 
-async function startRecording(index) {
+function startRecording(index) {
+  const session = { index, chunks: [], recorder: null, stream: null, released: false, save: false };
+  recordingSession = session;
+  pads[index].classList.add('recording');
+  captureRecording(session);
+  return session;
+}
+
+async function captureRecording(session) {
+  const { index } = session;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-    chunks = []; recorder = new MediaRecorder(stream); heldPad = index;
-    recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
-    recorder.onstop = async () => {
+    if (recordingSession !== session) { stream.getTracks().forEach(track => track.stop()); pads[index].classList.remove('recording'); return; }
+    const mediaRecorder = new MediaRecorder(stream);
+    session.stream = stream; session.recorder = mediaRecorder;
+    mediaRecorder.ondataavailable = event => { if (event.data.size) session.chunks.push(event.data); };
+    mediaRecorder.onstop = async () => {
       stream.getTracks().forEach(track => track.stop());
       pads[index].classList.remove('recording');
+      if (recordingSession === session) recordingSession = null;
+      if (!session.save) return;
       try {
-        const data = await new Blob(chunks, { type: recorder.mimeType }).arrayBuffer();
+        const data = await new Blob(session.chunks, { type: mediaRecorder.mimeType }).arrayBuffer();
         sounds[index].buffer = trim(await audio().decodeAudioData(data));
         setPadState(index); message('Sound saved!');
       } catch (_) { message('Could not save that sound'); }
     };
-    recorder.start(); pads[index].classList.add('recording'); message('Recording… let go to finish');
-  } catch (_) { message('A grown-up needs to enable the microphone'); }
+    mediaRecorder.start();
+    if (session.released) mediaRecorder.stop();
+  } catch (_) {
+    pads[index].classList.remove('recording');
+    if (recordingSession === session) recordingSession = null;
+    message('A grown-up needs to enable the microphone');
+  }
+}
+
+function finishRecording(index, save) {
+  const session = recordingSession;
+  if (!session || session.index !== index) return;
+  session.released = true; session.save = save;
+  if (session.recorder?.state === 'recording') session.recorder.stop();
 }
 
 function trim(buffer) {
@@ -125,23 +149,26 @@ function pointerDown(event) {
   const index = Number(event.currentTarget.dataset.pad);
   heldPad = index; holdTriggered = false; shakeArmedAt = Date.now();
   event.currentTarget.classList.add('pressed'); event.currentTarget.setPointerCapture?.(event.pointerId);
+  const recording = sounds[index].buffer ? null : startRecording(index);
   holdTimer = setTimeout(() => {
+    if (recording && recordingSession !== recording) return;
     holdTriggered = true;
-    if (sounds[index].buffer) toggleLoop(index); else startRecording(index);
+    if (sounds[index].buffer) toggleLoop(index);
+    else { recording.save = true; message('Recording… let go to finish'); }
   }, HOLD_MS);
 }
 
 function pointerUp(event) {
   clearTimeout(holdTimer); event.currentTarget.classList.remove('pressed');
   const index = Number(event.currentTarget.dataset.pad);
-  if (recorder?.state === 'recording' && heldPad === index) recorder.stop();
+  if (recordingSession?.index === index) finishRecording(index, holdTriggered);
   else if (!holdTriggered && sounds[index].buffer) play(index);
   heldPad = null;
 }
 
 function pointerCancel(event) {
   clearTimeout(holdTimer); event.currentTarget.classList.remove('pressed');
-  if (recorder?.state === 'recording' && heldPad === Number(event.currentTarget.dataset.pad)) recorder.stop();
+  finishRecording(Number(event.currentTarget.dataset.pad), false);
   heldPad = null;
 }
 

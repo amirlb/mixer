@@ -6,9 +6,9 @@ Settings.
 
 ## Pads
 
-- An empty pad is faded. Pressing and holding it records from the microphone;
-  releasing finishes the recording and automatically trims quiet audio from its
-  beginning and end.
+- An empty pad is faded. Audio capture starts the instant it is pressed so the
+  beginning is never clipped. Releasing before the hold threshold discards the
+  capture; a valid hold saves it and trims quiet audio from both ends.
 - A quick tap on a filled pad plays its sound immediately. Each tap creates a
   separate voice, so the same sound can overlap itself at different phases.
 - Pressing and holding a filled pad adds it to, or removes it from, the loop.
@@ -32,8 +32,9 @@ one available.
 
 ## Device constraints
 
-- The web app requests landscape orientation in its manifest and keeps its
-  landscape-style interface available without waiting for device rotation.
+- The web app requests landscape orientation in its manifest. In portrait it
+  rotates a dimension-swapped landscape canvas, preserving the exact layout
+  instead of squeezing it into the narrow viewport.
 - It is a PWA with an app manifest, icons, and an offline service worker.
 - The implementation avoids frameworks and expensive continuous animation so
   it remains responsive on an Android tablet from roughly 2021.

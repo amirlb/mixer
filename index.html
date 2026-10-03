@@ -24,9 +24,8 @@
         <button id="stop" class="control stop" aria-label="Stop"><span aria-hidden="true">■</span></button>
         <button id="settings" class="control settings" aria-label="Settings"><span aria-hidden="true">⚙</span></button>
       </nav>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </main>
-
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <dialog id="gate" class="dialog">
       <form method="dialog" class="card" id="gate-form">
@@ -46,6 +45,7 @@
         <label class="volume">Volume <input id="volume" type="range" min="0" max="1" step="0.05" value="0.85"></label>
         <button id="permission" class="wide">Enable microphone</button>
         <button id="install" class="wide" hidden>Install this app</button>
+        <p class="privacy">To clear a recording, hold its pad and shake the tablet.</p>
         <p class="privacy">Recordings stay on this tablet and disappear when the page closes.</p>
       </section>
     </dialog>
