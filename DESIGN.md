@@ -16,15 +16,17 @@ Settings.
   immediate and independent.
 - A circular progress ring follows every one-shot playback. Overlapping plays
   are shown as concentric rings on the pad.
+- All six pads are exact squares with a flat, bezel-free surface.
 - Holding a pad while shaking the tablet clears its recording. This destructive
   action has a deliberate gesture and is confirmed by visible feedback.
 
 ## Global controls
 
-- **Stop** immediately stops every voice and clears every selected loop.
-- **Settings** opens a fresh, random two-digit addition challenge whose answer
-  never exceeds 99. A correct answer opens the parent panel; no previous answer
-  or repeated state is stored.
+- **Stop** is a circular transport control that immediately stops every voice
+  and clears every selected loop.
+- **Settings** is a quiet, flat corner control. It opens a fresh, random
+  two-digit addition challenge whose answer never exceeds 99. A correct answer
+  opens the parent panel; no previous answer or repeated state is stored.
 
 The parent panel contains only useful device controls for now: master volume,
 microphone permission guidance, and an install shortcut when the browser makes
