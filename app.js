@@ -9,7 +9,8 @@ let recordingSession;
 let heldPad = null;
 let holdTimer = 0;
 let holdTriggered = false;
-let shakeArmedAt = 0;
+let gesture = null;
+const trash = document.querySelector('#trash');
 let deferredInstall;
 const HOLD_MS = 600;
 
@@ -35,7 +36,7 @@ function setPadState(index) {
   const sound = sounds[index];
   pad.classList.toggle('empty', !sound.buffer);
   pad.classList.toggle('looping', sound.looping);
-  pad.setAttribute('aria-label', sound.buffer ? `${pad.querySelector('.art').textContent} sound pad${sound.looping ? ', looping' : ''}. Tap to play; hold to toggle loop; hold and shake to clear.` : 'Empty sound pad. Hold to record.');
+  pad.setAttribute('aria-label', sound.buffer ? `${pad.dataset.name} sound pad${sound.looping ? ', looping' : ''}. Tap to play; hold to toggle loop; drag to trash to clear.` : `Empty ${pad.dataset.name} sound pad. Hold to record.`);
 }
 
 function play(index, loop = false) {
@@ -44,6 +45,7 @@ function play(index, loop = false) {
   const ctx = audio();
   const source = ctx.createBufferSource();
   source.buffer = sound.buffer; source.loop = loop; source.connect(master); source.start();
+  source.padIndex = index;
   activeSources.add(source); source.onended = () => activeSources.delete(source);
   if (!loop) showProgress(index, source, sound.buffer.duration);
   return source;
@@ -145,34 +147,87 @@ function trim(buffer) {
 }
 
 function pointerDown(event) {
+  if (gesture || (event.pointerType === 'mouse' && event.button !== 0)) return;
   event.preventDefault();
   const index = Number(event.currentTarget.dataset.pad);
-  heldPad = index; holdTriggered = false; shakeArmedAt = Date.now();
+  heldPad = index; holdTriggered = false;
+  gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, dragging: false, ghost: null };
   event.currentTarget.classList.add('pressed'); event.currentTarget.setPointerCapture?.(event.pointerId);
   const recording = sounds[index].buffer ? null : startRecording(index);
   holdTimer = setTimeout(() => {
     if (recording && recordingSession !== recording) return;
     holdTriggered = true;
-    if (sounds[index].buffer) toggleLoop(index);
-    else { recording.save = true; message('Recording… let go to finish'); }
+    if (recording) { recording.save = true; message('Recording… let go to finish'); }
   }, HOLD_MS);
 }
 
+function overTrash(event) {
+  const bounds = trash.getBoundingClientRect();
+  return event.clientX >= bounds.left && event.clientX <= bounds.right &&
+    event.clientY >= bounds.top && event.clientY <= bounds.bottom;
+}
+
+function pointerMove(event) {
+  if (!gesture || gesture.id !== event.pointerId || !sounds[heldPad]?.buffer) return;
+  if (!gesture.dragging && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 14) {
+    clearTimeout(holdTimer);
+    gesture.dragging = true;
+    const pad = pads[heldPad];
+    pad.classList.remove('pressed');
+    pad.classList.add('dragging');
+    trash.hidden = false;
+    gesture.ghost = document.createElement('div');
+    gesture.ghost.className = 'drag-ghost';
+    gesture.ghost.setAttribute('aria-hidden', 'true');
+    gesture.ghost.style.background = getComputedStyle(pad).backgroundColor;
+    gesture.ghost.append(pad.querySelector('.art').cloneNode(true));
+    document.body.append(gesture.ghost);
+  }
+  if (gesture.dragging) {
+    gesture.ghost.style.left = `${event.clientX}px`;
+    gesture.ghost.style.top = `${event.clientY}px`;
+    trash.classList.toggle('over', overTrash(event));
+  }
+}
+
+function resetGesture() {
+  clearTimeout(holdTimer);
+  pads[heldPad]?.classList.remove('pressed', 'dragging');
+  gesture?.ghost?.remove();
+  trash.hidden = true;
+  trash.classList.remove('over');
+  gesture = null;
+  heldPad = null;
+}
+
 function pointerUp(event) {
+  if (!gesture || gesture.id !== event.pointerId) return;
   clearTimeout(holdTimer); event.currentTarget.classList.remove('pressed');
   const index = Number(event.currentTarget.dataset.pad);
-  if (recordingSession?.index === index) finishRecording(index, holdTriggered);
-  else if (!holdTriggered && sounds[index].buffer) play(index);
-  heldPad = null;
+  if (gesture.dragging) {
+    if (overTrash(event)) clearPad(index);
+  } else if (recordingSession?.index === index) finishRecording(index, holdTriggered);
+  else if (sounds[index].buffer) {
+    if (holdTriggered) toggleLoop(index); else play(index);
+  }
+  resetGesture();
 }
 
 function pointerCancel(event) {
+  if (!gesture || gesture.id !== event.pointerId) return;
   clearTimeout(holdTimer); event.currentTarget.classList.remove('pressed');
   finishRecording(Number(event.currentTarget.dataset.pad), false);
-  heldPad = null;
+  resetGesture();
 }
 
 function clearPad(index) {
+  activeSources.forEach(source => {
+    if (source.padIndex === index) {
+      try { source.stop(); } catch (_) {}
+      activeSources.delete(source);
+    }
+  });
+  pads[index].querySelectorAll('.ring').forEach(ring => ring.remove());
   const sound = sounds[index];
   sound.looping = false; clearTimeout(sound.loopTimer);
   if (sound.loopSource) { try { sound.loopSource.stop(); } catch (_) {} }
@@ -182,15 +237,16 @@ function clearPad(index) {
 
 pads.forEach(pad => {
   pad.addEventListener('pointerdown', pointerDown);
+  pad.addEventListener('pointermove', pointerMove);
   pad.addEventListener('pointerup', pointerUp);
   pad.addEventListener('pointercancel', pointerCancel);
+  pad.addEventListener('lostpointercapture', pointerCancel);
   pad.addEventListener('contextmenu', event => event.preventDefault());
 });
 
-window.addEventListener('devicemotion', event => {
-  if (heldPad === null || !sounds[heldPad].buffer || Date.now() - shakeArmedAt < 350) return;
-  const a = event.accelerationIncludingGravity;
-  if (a && Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2) > 24) { clearTimeout(holdTimer); holdTriggered = true; clearPad(heldPad); heldPad = null; }
+window.addEventListener('blur', () => {
+  if (heldPad !== null) finishRecording(heldPad, false);
+  resetGesture();
 });
 
 document.querySelector('#stop').addEventListener('click', () => {

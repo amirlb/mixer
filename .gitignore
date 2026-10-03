@@ -1,0 +1,15 @@
+node_modules/
+
+# Playwright output
+blob-report/
+playwright-report/
+test-results/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Editor and operating-system files
+.DS_Store
+*.swp

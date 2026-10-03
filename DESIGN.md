@@ -6,7 +6,7 @@ Settings.
 
 ## Pads
 
-- An empty pad is faded. Audio capture starts the instant it is pressed so the
+- An empty pad is gray with fully visible SVG artwork. Audio capture starts when it is pressed so the
   beginning is never clipped. Releasing before the hold threshold discards the
   capture; a valid hold saves it and trims quiet audio from both ends.
 - A quick tap on a filled pad plays its sound immediately. Each tap creates a
@@ -17,8 +17,10 @@ Settings.
 - A circular progress ring follows every one-shot playback. Overlapping plays
   are shown as concentric rings on the pad.
 - All six pads are exact squares with a flat, bezel-free surface.
-- Holding a pad while shaking the tablet clears its recording. This destructive
-  action has a deliberate gesture and is confirmed by visible feedback.
+- Dragging a recorded pad reveals a trash can over the Stop control. Dropping
+  onto it clears the recording and stops its voices; dropping elsewhere or
+  cancelling keeps it. A stationary hold toggles the loop on release.
+- The background is solid, and all six pads use coordinated vector illustrations.
 
 ## Global controls
 
