@@ -59,7 +59,7 @@ function setPadState(index) {
   const sound = sounds[index];
   pad.classList.toggle('empty', !sound.buffer);
   pad.classList.toggle('looping', sound.looping);
-  pad.setAttribute('aria-label', sound.buffer ? `${pad.dataset.name} sound pad${sound.looping ? ', looping' : ''}. Tap to play; hold to toggle loop; drag to trash to clear.` : `Empty ${pad.dataset.name} sound pad. Hold to record.`);
+  pad.setAttribute('aria-label', sound.buffer ? `משטח ${pad.dataset.name}${sound.looping ? ', בלולאה' : ''}. הקישו להשמעה; לחצו לחיצה ארוכה כדי להפעיל או להפסיק לולאה; גררו לסל כדי למחוק.` : `משטח ${pad.dataset.name} ריק. לחצו לחיצה ארוכה כדי להקליט.`);
 }
 
 function play(index, loop = false) {
@@ -99,11 +99,11 @@ function toggleLoop(index) {
   if (sound.looping) {
     const delay = 400 - (performance.now() % 400);
     sound.loopTimer = setTimeout(() => { if (sound.looping) sound.loopSource = play(index, true); }, delay);
-    message('Loop added');
+    message('הלולאה הופעלה');
   } else {
     clearTimeout(sound.loopTimer);
     if (sound.loopSource) { try { sound.loopSource.stop(); } catch (_) {} sound.loopSource = null; }
-    message('Loop removed');
+    message('הלולאה הופסקה');
   }
   setPadState(index);
 }
@@ -132,15 +132,15 @@ async function captureRecording(session) {
       try {
         const data = await new Blob(session.chunks, { type: mediaRecorder.mimeType }).arrayBuffer();
         sounds[index].buffer = trim(await audio().decodeAudioData(data));
-        setPadState(index); message('Sound saved!');
-      } catch (_) { message('Could not save that sound'); }
+        setPadState(index); message('הצליל נשמר!');
+      } catch (_) { message('לא הצלחנו לשמור את הצליל'); }
     };
     mediaRecorder.start();
     if (session.released) mediaRecorder.stop();
   } catch (_) {
     pads[index].classList.remove('recording');
     if (recordingSession === session) recordingSession = null;
-    message('A grown-up needs to enable the microphone');
+    message('מבוגר צריך לאפשר גישה למיקרופון');
   }
 }
 
@@ -180,7 +180,7 @@ function pointerDown(event) {
   holdTimer = setTimeout(() => {
     if (recording && recordingSession !== recording) return;
     holdTriggered = true;
-    if (recording) { recording.save = true; message('Recording… let go to finish'); }
+    if (recording) { recording.save = true; message('מקליטים… שחררו כדי לסיים'); }
   }, HOLD_MS);
 }
 
@@ -254,7 +254,7 @@ function clearPad(index) {
   const sound = sounds[index];
   sound.looping = false; clearTimeout(sound.loopTimer);
   if (sound.loopSource) { try { sound.loopSource.stop(); } catch (_) {} }
-  sound.buffer = null; sound.loopSource = null; setPadState(index); message('Sound cleared');
+  sound.buffer = null; sound.loopSource = null; setPadState(index); message('הצליל נמחק');
   if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
 }
 
@@ -275,7 +275,7 @@ window.addEventListener('blur', () => {
 document.querySelector('#stop').addEventListener('click', () => {
   activeSources.forEach(source => { try { source.stop(); } catch (_) {} }); activeSources.clear();
   sounds.forEach((sound, index) => { sound.looping = false; clearTimeout(sound.loopTimer); sound.loopSource = null; setPadState(index); });
-  document.querySelectorAll('.ring').forEach(ring => ring.remove()); message('Everything stopped');
+  document.querySelectorAll('.ring').forEach(ring => ring.remove()); message('הכול נעצר');
 });
 
 const gate = document.querySelector('#gate');
@@ -288,14 +288,23 @@ document.querySelector('#settings').addEventListener('click', () => {
 document.querySelector('#gate-form').addEventListener('submit', event => {
   event.preventDefault();
   if (Number(document.querySelector('#answer').value) === expectedAnswer) { gate.close(); document.querySelector('#parent').showModal(); }
-  else { document.querySelector('#gate-error').textContent = 'Try that one again'; document.querySelector('#answer').select(); }
+  else { document.querySelector('#gate-error').textContent = 'נסו שוב'; document.querySelector('#answer').select(); }
 });
 document.querySelector('#close-gate').addEventListener('click', () => gate.close());
 document.querySelector('#close-settings').addEventListener('click', () => document.querySelector('#parent').close());
 document.querySelector('#volume').addEventListener('input', event => { audio(); master.gain.value = Number(event.target.value); });
+const iconsToggle = document.querySelector('#show-icons');
+let showIcons = true;
+try { showIcons = localStorage.getItem('mixer-show-icons') !== 'false'; } catch (_) {}
+iconsToggle.checked = showIcons;
+document.documentElement.classList.toggle('hide-pad-icons', !showIcons);
+iconsToggle.addEventListener('change', () => {
+  document.documentElement.classList.toggle('hide-pad-icons', !iconsToggle.checked);
+  try { localStorage.setItem('mixer-show-icons', String(iconsToggle.checked)); } catch (_) {}
+});
 document.querySelector('#permission').addEventListener('click', async () => {
-  try { const stream = await navigator.mediaDevices.getUserMedia({audio:true}); stream.getTracks().forEach(track => track.stop()); message('Microphone ready'); }
-  catch (_) { message('Microphone is blocked in browser settings'); }
+  try { const stream = await navigator.mediaDevices.getUserMedia({audio:true}); stream.getTracks().forEach(track => track.stop()); message('המיקרופון מוכן'); }
+  catch (_) { message('המיקרופון חסום בהגדרות הדפדפן'); }
 });
 window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); deferredInstall = event; document.querySelector('#install').hidden = false; });
 document.querySelector('#install').addEventListener('click', async () => { if (deferredInstall) { deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; document.querySelector('#install').hidden = true; } });

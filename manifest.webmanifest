@@ -1,7 +1,9 @@
 {
-  "name": "Mixer — My Sound Pad",
-  "short_name": "Mixer",
-  "description": "A simple six-pad sound toy.",
+  "name": "מיקסר — משטח הצלילים שלי",
+  "short_name": "מיקסר",
+  "description": "משחק צלילים פשוט עם שישה משטחים.",
+  "lang": "he",
+  "dir": "rtl",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

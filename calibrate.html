@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#20113c">
-    <title>Mixer microphone test</title>
+    <title>בדיקת עוצמת המיקרופון</title>
     <style>
       :root { color-scheme:dark; font-family:system-ui,sans-serif; background:#20113c; color:white }
       * { box-sizing:border-box }
@@ -33,39 +33,39 @@
     </style>
   </head>
   <body>
-    <h1>Microphone level test</h1>
-    <p class="intro">Enable the microphone, then record the same phrase from the same distance with each option. Every recording lasts three seconds. Play them back and note which number sounds best—not merely loudest.</p>
+    <h1>בדיקת עוצמת המיקרופון</h1>
+    <p class="intro">הפעילו את המיקרופון, ואז הקליטו את אותו המשפט מאותו מרחק בכל אפשרות. כל הקלטה נמשכת שלוש שניות. השמיעו אותן ובחרו איזו נשמעת הכי טוב — לא רק הכי חזק.</p>
     <div class="toolbar">
-      <button id="permission">Enable microphone</button>
-      <span id="global-status" role="status" aria-live="polite">Nothing is uploaded.</span>
+      <button id="permission">הפעלת המיקרופון</button>
+      <span id="global-status" role="status" aria-live="polite">שום דבר לא מועלה לרשת.</span>
     </div>
     <main class="options">
       <section class="option" data-mode="auto">
-        <h2>1 · Android automatic</h2>
-        <p>Android/Chrome controls the microphone level. No additional boost.</p>
-        <div class="details">Not recorded</div>
-        <div class="actions"><button class="record">Record 3 sec</button><button class="play" disabled aria-label="Play option 1">▶</button></div>
+        <h2>1 · הכוונון האוטומטי של Android</h2>
+        <p>Android ו־Chrome שולטים בעוצמת המיקרופון. ללא הגברה נוספת.</p>
+        <div class="details">טרם הוקלט</div>
+        <div class="actions"><button class="record">הקלטה ל־3 שניות</button><button class="play" disabled aria-label="השמעת אפשרות 1">▶</button></div>
       </section>
       <section class="option" data-mode="raw">
-        <h2>2 · Raw</h2>
-        <p>Automatic gain disabled. No additional boost.</p>
-        <div class="details">Not recorded</div>
-        <div class="actions"><button class="record">Record 3 sec</button><button class="play" disabled aria-label="Play option 2">▶</button></div>
+        <h2>2 · ללא עיבוד</h2>
+        <p>הגברה אוטומטית כבויה. ללא הגברה נוספת.</p>
+        <div class="details">טרם הוקלט</div>
+        <div class="actions"><button class="record">הקלטה ל־3 שניות</button><button class="play" disabled aria-label="השמעת אפשרות 2">▶</button></div>
       </section>
       <section class="option" data-mode="double">
-        <h2>3 · Fixed 2×</h2>
-        <p>Automatic gain disabled. The finished recording gets up to 2× gain with peak protection.</p>
-        <div class="details">Not recorded</div>
-        <div class="actions"><button class="record">Record 3 sec</button><button class="play" disabled aria-label="Play option 3">▶</button></div>
+        <h2>3 · הגברה קבועה פי 2</h2>
+        <p>הגברה אוטומטית כבויה. ההקלטה המוכנה מוגברת עד פי 2, עם הגנה מעומס יתר.</p>
+        <div class="details">טרם הוקלט</div>
+        <div class="actions"><button class="record">הקלטה ל־3 שניות</button><button class="play" disabled aria-label="השמעת אפשרות 3">▶</button></div>
       </section>
       <section class="option" data-mode="balanced">
-        <h2>4 · Loudness balanced</h2>
-        <p>Automatic gain disabled. Average loudness sets up to 4× gain, followed by a soft limiter.</p>
-        <div class="details">Not recorded</div>
-        <div class="actions"><button class="record">Record 3 sec</button><button class="play" disabled aria-label="Play option 4">▶</button></div>
+        <h2>4 · איזון עוצמה</h2>
+        <p>הגברה אוטומטית כבויה. העוצמה הממוצעת קובעת הגברה של עד פי 4, עם הגבלת שיאים עדינה.</p>
+        <div class="details">טרם הוקלט</div>
+        <div class="actions"><button class="record">הקלטה ל־3 שניות</button><button class="play" disabled aria-label="השמעת אפשרות 4">▶</button></div>
       </section>
     </main>
-    <p class="note">Recordings remain in memory on this device and disappear when this page closes.</p>
+    <p class="note">ההקלטות נשמרות בזיכרון המכשיר ונמחקות כשסוגרים את הדף.</p>
     <script>
       'use strict';
       const cards = [...document.querySelectorAll('.option')];
@@ -89,11 +89,11 @@
         try {
           const stream = await requestStream(true);
           stream.getTracks().forEach(track => track.stop());
-          permission.textContent = 'Microphone ready';
+          permission.textContent = 'המיקרופון מוכן';
           permission.classList.add('ready');
-          globalStatus.textContent = 'Record the same phrase four times.';
+          globalStatus.textContent = 'הקליטו את אותו המשפט ארבע פעמים.';
         } catch (_) {
-          globalStatus.textContent = 'Microphone permission was blocked.';
+          globalStatus.textContent = 'הגישה למיקרופון נחסמה.';
         }
       });
 
@@ -167,7 +167,7 @@
           recorder.start();
           button.classList.add('active');
           for (let remaining = 3; remaining > 0; remaining--) {
-            button.textContent = `Recording ${remaining}…`;
+            button.textContent = `מקליטים… ${remaining}`;
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
           recorder.stop();
@@ -179,16 +179,16 @@
           const result = await process(decoded, mode);
           const levels = stats(result.buffer);
           recordings.set(mode, result.buffer);
-          details.textContent = `AGC: ${actualAgc ?? 'unreported'} · gain: ${result.gain.toFixed(2)}× · RMS: ${levels.rms.toFixed(3)} · peak: ${levels.peak.toFixed(3)}`;
+          details.textContent = `הגברה אוטומטית: ${actualAgc === undefined ? 'לא דווחה' : actualAgc ? 'פועלת' : 'כבויה'} · הגבר: ${result.gain.toFixed(2)}× · ממוצע: ${levels.rms.toFixed(3)} · שיא: ${levels.peak.toFixed(3)}`;
           card.querySelector('.play').disabled = false;
-          globalStatus.textContent = `Option ${cards.indexOf(card) + 1} is ready to play.`;
+          globalStatus.textContent = `אפשרות ${cards.indexOf(card) + 1} מוכנה להשמעה.`;
         } catch (error) {
-          details.textContent = 'Recording failed. Check microphone permission.';
-          globalStatus.textContent = error.message;
+          details.textContent = 'ההקלטה נכשלה. בדקו את ההרשאה למיקרופון.';
+          globalStatus.textContent = 'לא הצלחנו להקליט.';
         } finally {
           stream?.getTracks().forEach(track => track.stop());
           button.classList.remove('active');
-          button.textContent = 'Record 3 sec';
+          button.textContent = 'הקלטה ל־3 שניות';
           recording = false;
           setDisabled(false);
         }
