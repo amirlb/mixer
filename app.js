@@ -279,18 +279,19 @@ document.querySelector('#stop').addEventListener('click', () => {
 });
 
 const gate = document.querySelector('#gate');
+const answer = document.querySelector('#answer');
 let expectedAnswer = 0;
 document.querySelector('#settings').addEventListener('click', () => {
   expectedAnswer = 20 + Math.floor(Math.random() * 80);
   const left = 10 + Math.floor(Math.random() * (expectedAnswer - 19));
   const right = expectedAnswer - left;
   document.querySelector('#question').textContent = `${left} + ${right} = ?`;
-  document.querySelector('#answer').value = ''; document.querySelector('#gate-error').textContent = ''; gate.showModal();
+  answer.value = ''; document.querySelector('#gate-error').textContent = ''; gate.showModal(); answer.focus();
 });
 document.querySelector('#gate-form').addEventListener('submit', event => {
   event.preventDefault();
-  if (Number(document.querySelector('#answer').value) === expectedAnswer) { gate.close(); document.querySelector('#parent').showModal(); }
-  else { document.querySelector('#gate-error').textContent = 'נסו שוב'; document.querySelector('#answer').select(); }
+  if (Number(answer.value) === expectedAnswer) { gate.close(); document.querySelector('#parent').showModal(); }
+  else { document.querySelector('#gate-error').textContent = 'נסו שוב'; answer.select(); }
 });
 document.querySelector('#close-gate').addEventListener('click', () => gate.close());
 document.querySelector('#close-settings').addEventListener('click', () => document.querySelector('#parent').close());
