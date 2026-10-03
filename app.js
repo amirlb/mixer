@@ -119,7 +119,7 @@ function startRecording(index) {
 async function captureRecording(session) {
   const { index } = session;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
     if (recordingSession !== session) { stream.getTracks().forEach(track => track.stop()); pads[index].classList.remove('recording'); return; }
     const mediaRecorder = new MediaRecorder(stream);
     session.stream = stream; session.recorder = mediaRecorder;
@@ -131,7 +131,7 @@ async function captureRecording(session) {
       if (!session.save) return;
       try {
         const data = await new Blob(session.chunks, { type: mediaRecorder.mimeType }).arrayBuffer();
-        sounds[index].buffer = trim(boostRecording(await audio().decodeAudioData(data)));
+        sounds[index].buffer = trim(await audio().decodeAudioData(data));
         setPadState(index); message('Sound saved!');
       } catch (_) { message('Could not save that sound'); }
     };
@@ -149,21 +149,6 @@ function finishRecording(index, save) {
   if (!session || session.index !== index) return;
   session.released = true; session.save = save;
   if (session.recorder?.state === 'recording') session.recorder.stop();
-}
-
-function boostRecording(buffer) {
-  let peak = 0;
-  for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-    for (const sample of buffer.getChannelData(channel)) peak = Math.max(peak, Math.abs(sample));
-  }
-  // Apply a predictable 2x boost. Use one gain across channels to preserve
-  // balance, leave near-silence alone, and keep peaks below full scale.
-  const gain = peak >= 0.001 ? Math.min(2, 0.95 / peak) : 1;
-  for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-    const samples = buffer.getChannelData(channel);
-    for (let i = 0; i < samples.length; i++) samples[i] *= gain;
-  }
-  return buffer;
 }
 
 function trim(buffer) {
