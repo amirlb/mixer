@@ -33,8 +33,9 @@ Settings.
 - Stop has a larger touch target, with an even larger drag-to-trash target in
   the same reserved column. A wider gutter separates both from the pads.
 - **Settings** is a quiet, flat corner control. It opens a fresh, random
-  two-digit addition challenge whose answer never exceeds 99. A correct answer
-  opens the parent panel; no previous answer or repeated state is stored.
+  two-digit addition challenge. Answers are sampled uniformly from 20 through
+  99, then randomly split into two two-digit operands. A correct answer opens
+  the parent panel; no previous answer or repeated state is stored.
 
 The compact parent panel contains master volume, a saved show/hide-pad-icons
 choice, microphone permission guidance, and an install shortcut when the

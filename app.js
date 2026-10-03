@@ -281,8 +281,10 @@ document.querySelector('#stop').addEventListener('click', () => {
 const gate = document.querySelector('#gate');
 let expectedAnswer = 0;
 document.querySelector('#settings').addEventListener('click', () => {
-  const left = 10 + Math.floor(Math.random() * 80), right = 10 + Math.floor(Math.random() * (90 - left));
-  expectedAnswer = left + right; document.querySelector('#question').textContent = `${left} + ${right} = ?`;
+  expectedAnswer = 20 + Math.floor(Math.random() * 80);
+  const left = 10 + Math.floor(Math.random() * (expectedAnswer - 19));
+  const right = expectedAnswer - left;
+  document.querySelector('#question').textContent = `${left} + ${right} = ?`;
   document.querySelector('#answer').value = ''; document.querySelector('#gate-error').textContent = ''; gate.showModal();
 });
 document.querySelector('#gate-form').addEventListener('submit', event => {
